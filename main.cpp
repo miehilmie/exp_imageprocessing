@@ -77,15 +77,23 @@ int main(int argv, char** argc) {
 
 	}
 
-	// test
-	for (int i = 0; i < m_imgdimension[0].height; ++i)
+	// displaying
+	for (int tc = 0; tc < m_testcase; ++tc)
 	{
-		for (int j = 0; j < m_imgdimension[0].width; ++j)
+		cout << "#" << tc+1 << " TEST CASE ======================>" << endl;
+		for (int i = 0; i < m_imgdimension[tc].height; ++i)
 		{
-			cout << "RGB = R(" << m_img[0][i][j].red << ") G(" << m_img[0][i][j].green << ") B(" << m_img[0][i][j].blue << ")" << "   ";
+			for (int j = 0; j < m_imgdimension[tc].width; ++j)
+			{
+				cout << "RGB = R(" << m_img[tc][i][j].red << ") G(" << m_img[tc][i][j].green << ") B(" << m_img[tc][i][j].blue << ")" << "   ";
+			}
+			cout << endl;
 		}
 		cout << endl;
 	}
+
+
+	// avoid memleak
 	for (int i = 0; i < m_testcase; ++i)
 	{
 		for(int	j = 0; j < m_imgdimension[i].height; j++) {
