@@ -16,10 +16,10 @@ int main()
 	string s;
 	f.open("test.txt", fstream::in | fstream::out);
 	int row = 5, col = 5;
-	m_RGB **element = new m_RGB*[row];
+	RGB **element = new RGB*[row];
 	for (int i = 0; i < row; ++i)
 	{
-		element[i] = new m_RGB[col];
+		element[i] = new RGB[col];
 	}
 	for(int cur_row = 0; cur_row < row; ++cur_row) {
 
