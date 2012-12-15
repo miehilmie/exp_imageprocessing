@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <cstring>
 using namespace std;
 
 #define MAX_CHANNEL 3
@@ -14,21 +15,35 @@ struct Dimension {
 	int height;
 	int width;
 };
-
-/***
- * File : main.cpp
- * Description : You should run this using ./a.out < 'file' 
- * 'file' is where your input format file
-**/
-int main(int argv, char** argc) {
-	string s_temp;
-	int m_testcase;
+struct ImageData
+{
+	int size; // test case
 	vector<string> m_imgtype;			// all related to test case index
 	vector<Dimension> m_imgdimension;   // all related to test case index
 	vector<RGB**>  m_img;               // all related to test case index
+	ImageData() {}
+	ImageData(const ImageData& cpy) {
+		size = cpy.size;
+		m_imgtype = cpy.m_imgtype;
+		m_imgdimension = cpy.m_imgdimension;
+		m_img = cpy.m_img;
+	}
+	~ImageData() {
+		// avoid memleak
+		for (int i = 0; i < size; ++i)
+		{
+			for(int	j = 0; j < m_imgdimension[i].height; j++) {
+				delete [] m_img[i][j];
+			}
+			delete [] m_img[i];
+		}
+	}
+};
 
-	cin >> m_testcase;
-	for (int cur_tcase = 0; cur_tcase < m_testcase; ++cur_tcase)
+void extractInput(ImageData* &output) {
+	cin >> output->size;
+
+	for (int cur_tcase = 0; cur_tcase < output->size; ++cur_tcase)
 	{
 		string imgtype;
 		Dimension imgdimension;
@@ -70,42 +85,73 @@ int main(int argv, char** argc) {
 				img[cur_row][cur_col] = temp;
 			}
 		}
-
-		m_imgtype.push_back(imgtype);
-		m_imgdimension.push_back(imgdimension);
-		m_img.push_back(img);
-
+		output->m_imgtype.push_back(imgtype);
+		output->m_imgdimension.push_back(imgdimension);
+		output->m_img.push_back(img);
 	}
-	cout << m_testcase << endl << endl;
+}
+
+void displayOutput(ImageData* img) {
 	// displaying
-	for (int tc = 0; tc < m_testcase; ++tc)
+	cout << img->size << endl << endl;
+	for (int tc = 0; tc < img->size; ++tc)
 	{
-		cout << m_imgtype[tc] << endl;
-		cout << m_imgdimension[tc].width << endl << m_imgdimension[tc].height << endl;
-		for (int i = 0; i < m_imgdimension[tc].height; ++i)
+		cout << img->m_imgtype[tc] << endl;
+		cout << img->m_imgdimension[tc].width << endl << img->m_imgdimension[tc].height << endl;
+		for (int i = 0; i < img->m_imgdimension[tc].height; ++i)
 		{
-			for (int j = 0; j < m_imgdimension[tc].width; ++j)
+			for (int j = 0; j < img->m_imgdimension[tc].width; ++j)
 			{
 				if(j != 0) cout << " ";
-				cout << m_img[tc][i][j].red << " " << m_img[tc][i][j].green << " " << m_img[tc][i][j].blue;
+				cout << img->m_img[tc][i][j].red << " " << img->m_img[tc][i][j].green << " " << img->m_img[tc][i][j].blue;
 			}
 			cout << endl;
 		}
 	}
+}
 
+void meanFilter(ImageData* input, ImageData* &output) {
+	ImageData* extension = new ImageData(*input);
+	int EXT_VALUE = 2;
 
-	// avoid memleak
-	for (int i = 0; i < m_testcase; ++i)
+	for (int i = 0; i < input->size; ++i)
 	{
-		for(int	j = 0; j < m_imgdimension[i].height; j++) {
-			delete [] m_img[i][j];
+		extension->m_imgdimension[i].width += EXT_VALUE*2;
+		extension->m_imgdimension[i].height += EXT_VALUE*2;
+
+		RGB** image = new RGB*[extension->m_imgdimension[i].height];
+		for (int j = 0; j < input->m_imgdimension[i].height; ++j)
+		{
+			image[j] = new RGB[extension->m_imgdimension[i].width];
+			memcpy(image[j] + EXT_VALUE, input->m_img[i][j], sizeof(input->m_img[i][j]));
+			for (int v = 0; v < EXT_VALUE; ++v)
+			{
+				// left = v
+				
+				//right
+			}
 		}
-		delete [] m_img[i];
+		cout << image[0][0].red;
+
+
 	}
 
+}
 
-	
-	// getline(cin, line);
-	// getline(cin, x);
+
+/***
+ * File : main.cpp
+ * Description : You should run this using ./a.out < 'file' 
+ * 'file' is where your input format file
+**/
+int main(int argv, char** argc) {
+	ImageData* img = new ImageData();
+	ImageData* output;
+
+	extractInput(img);
+	meanFilter(img, output);
+	// displayOutput(img);
+
+	delete img;
 	return 0;
 }
