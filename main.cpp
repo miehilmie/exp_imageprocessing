@@ -11,99 +11,88 @@ struct RGB {
 	int green;
 	int blue;
 };
-struct Dimension {
-	int height;
-	int width;
-};
 struct ImageData
 {
-	int size; // test case
-	vector<string> m_imgtype;			// all related to test case index
-	vector<Dimension> m_imgdimension;   // all related to test case index
-	vector<RGB**>  m_img;               // all related to test case index
+	string type;
+	int width; 
+	int height;
+	RGB*  m_img;
 	ImageData() {}
 	ImageData(const ImageData& cpy) {
-		size = cpy.size;
-		m_imgtype = cpy.m_imgtype;
-		m_imgdimension = cpy.m_imgdimension;
+		type = cpy.type;
+		width = cpy.width;
+		height = cpy.height;
 		m_img = cpy.m_img;
 	}
 	~ImageData() {
 		// avoid memleak
-		for (int i = 0; i < size; ++i)
-		{
-			for(int	j = 0; j < m_imgdimension[i].height; j++) {
-				delete [] m_img[i][j];
-			}
-			delete [] m_img[i];
-		}
+		delete [] m_img;
 	}
 };
 
-void extractInput(ImageData* &output) {
-	cin >> output->size;
+void extractInput(vector<ImageData*> &output) {
+	int size;
+	cin >> size;
 
-	for (int cur_tcase = 0; cur_tcase < output->size; ++cur_tcase)
+	for (int cur_tcase = 0; cur_tcase < size; ++cur_tcase)
 	{
 		string imgtype;
-		Dimension imgdimension;
-		RGB** img;
+		int width;
+		int height;
+		RGB* img;
 
 		cin >> imgtype;
-		cin >> imgdimension.width;
-		cin >> imgdimension.height;
+		cin >> width;
+		cin >> height;
 
-		img = new RGB*[imgdimension.height];
+		img = new RGB[height * width];
 
-		for (int i = 0; i < imgdimension.height; ++i)
+		for (int c = 0; c < height * width; ++c)
 		{
-			img[i] = new RGB[imgdimension.width];
-		}
-
-		for (int cur_row = 0; cur_row < imgdimension.height; ++cur_row)
-		{
-			for (int cur_col = 0; cur_col < imgdimension.width; ++cur_col)
+			RGB temp;
+			for(int channel = 0; channel < MAX_CHANNEL; ++channel)
 			{
-				RGB temp;
-				for(int channel = 0; channel < MAX_CHANNEL; ++channel)
+				int input;
+				cin >> input;
+				if(channel%MAX_CHANNEL == 0)
 				{
-					int input;
-					cin >> input;
-					if(channel%MAX_CHANNEL == 0)
-					{
-						temp.red = input;
-					}
-					else if(channel%MAX_CHANNEL == 1)
-					{
-						temp.green = input;
-					}
-					else
-					{
-						temp.blue = input;
-					}
+					temp.red = input;
 				}
-				img[cur_row][cur_col] = temp;
+				else if(channel%MAX_CHANNEL == 1)
+				{
+					temp.green = input;
+				}
+				else
+				{
+					temp.blue = input;
+				}
 			}
+			img[c] = temp;
 		}
-		output->m_imgtype.push_back(imgtype);
-		output->m_imgdimension.push_back(imgdimension);
-		output->m_img.push_back(img);
+		ImageData* n = new ImageData();
+		n->type = imgtype;
+		n->height = height;
+		n->width = width;
+		n->m_img = img;
+		output.push_back(n);
 	}
 }
 
-void displayOutput(ImageData* img) {
+void displayOutput(vector<ImageData*> img) {
 	// displaying
-	cout << img->size << endl << endl;
-	for (int tc = 0; tc < img->size; ++tc)
+	cout << img.size() << endl << endl;
+	for (int tc = 0; tc < img.size(); ++tc)
 	{
-		cout << img->m_imgtype[tc] << endl;
-		cout << img->m_imgdimension[tc].width << endl << img->m_imgdimension[tc].height << endl;
-		for (int i = 0; i < img->m_imgdimension[tc].height; ++i)
+		cout << img[tc]->type << endl;
+		cout << img[tc]->width << endl << img[tc]->height << endl;
+		for (int row = 0; row < img[tc]->height; ++row)
 		{
-			for (int j = 0; j < img->m_imgdimension[tc].width; ++j)
+			for (int col = 0; col < img[tc]->width; ++col)
 			{
-				if(j != 0) cout << " ";
-				cout << img->m_img[tc][i][j].red << " " << img->m_img[tc][i][j].green << " " << img->m_img[tc][i][j].blue;
+				if(col != 0) cout << " ";
+				cout << img[tc]->m_img[row*img[tc]->width + col].red << " " 
+					 << img[tc]->m_img[row*img[tc]->width + col].green << " "
+					 << img[tc]->m_img[row*img[tc]->width + col].blue;
 			}
 			cout << endl;
 		}
@@ -111,31 +100,32 @@ void displayOutput(ImageData* img) {
 }
 
 void meanFilter(ImageData* input, ImageData* &output) {
-	ImageData* extension = new ImageData(*input);
+
 	int EXT_VALUE = 2;
 
-	for (int i = 0; i < input->size; ++i)
+	int W = input->width;
+	int NW = input->width + EXT_VALUE*2;
+	int H = input->height;
+	int NH = input->height + EXT_VALUE*2;
+
+	RGB* extension = new RGB[(NW) * (NH)];
+	
+	for (int i = 0; i < H; ++i)
 	{
-		extension->m_imgdimension[i].width += EXT_VALUE*2;
-		extension->m_imgdimension[i].height += EXT_VALUE*2;
-
-		RGB** image = new RGB*[extension->m_imgdimension[i].height];
-		for (int j = 0; j < input->m_imgdimension[i].height; ++j)
-		{
-			image[j] = new RGB[extension->m_imgdimension[i].width];
-			memcpy(image[j] + EXT_VALUE, input->m_img[i][j], sizeof(input->m_img[i][j]));
-			for (int v = 0; v < EXT_VALUE; ++v)
-			{
-				// left = v
-				
-				//right
-			}
-		}
-		cout << image[0][0].red;
-
-
+		memcpy(extension + NW * (i+EXT_VALUE) + EXT_VALUE , input->m_img + i * W, W *sizeof(RGB));
 	}
 
+	for (int row = 0; row < NH; ++row)
+	{
+		for (int col = 0; col < NW; ++col)
+		{
+			if(col != 0) cout << " ";
+			cout << extension[row*NW + col].red << " " 
+				 << extension[row*NW + col].green << " "
+				 << extension[row*NW + col].blue;
+		}
+		cout << endl;
+	}
 }
 
 
@@ -145,13 +135,12 @@ void meanFilter(ImageData* input, ImageData* &output) {
  * 'file' is where your input format file
 **/
 int main(int argv, char** argc) {
-	ImageData* img = new ImageData();
+	vector<ImageData*> img;
 	ImageData* output;
 
 	extractInput(img);
-	meanFilter(img, output);
-	// displayOutput(img);
+	 meanFilter(img[0], output);
+	//displayOutput(img);
 
-	delete img;
 	return 0;
 }
