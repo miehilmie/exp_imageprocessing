@@ -76,20 +76,21 @@ int main(int argv, char** argc) {
 		m_img.push_back(img);
 
 	}
-
+	cout << m_testcase << endl << endl;
 	// displaying
 	for (int tc = 0; tc < m_testcase; ++tc)
 	{
-		cout << "#" << tc+1 << " TEST CASE ======================>" << endl;
+		cout << m_imgtype[tc] << endl;
+		cout << m_imgdimension[tc].width << endl << m_imgdimension[tc].height << endl;
 		for (int i = 0; i < m_imgdimension[tc].height; ++i)
 		{
 			for (int j = 0; j < m_imgdimension[tc].width; ++j)
 			{
-				cout << "RGB = R(" << m_img[tc][i][j].red << ") G(" << m_img[tc][i][j].green << ") B(" << m_img[tc][i][j].blue << ")" << "   ";
+				if(j != 0) cout << " ";
+				cout << m_img[tc][i][j].red << " " << m_img[tc][i][j].green << " " << m_img[tc][i][j].blue;
 			}
 			cout << endl;
 		}
-		cout << endl;
 	}
 
 
