@@ -78,30 +78,57 @@ void extractInput(vector<ImageData*> &output) {
 	}
 }
 
-void displayOutput(vector<ImageData*> img) {
+void displayOutput(ImageData* img) {
 	// displaying
-	cout << img.size() << endl << endl;
-	for (int tc = 0; tc < img.size(); ++tc)
-	{
-		cout << img[tc]->type << endl;
-		cout << img[tc]->width << endl << img[tc]->height << endl;
-		for (int row = 0; row < img[tc]->height; ++row)
+		cout << img->type << endl;
+		cout << img->width << endl << img->height << endl;
+		for (int row = 0; row < img->height; ++row)
 		{
-			for (int col = 0; col < img[tc]->width; ++col)
+			for (int col = 0; col < img->width; ++col)
 			{
 				if(col != 0) cout << " ";
-				cout << img[tc]->m_img[row*img[tc]->width + col].red << " " 
-					 << img[tc]->m_img[row*img[tc]->width + col].green << " "
-					 << img[tc]->m_img[row*img[tc]->width + col].blue;
+				cout << img->m_img[row*img->width + col].red << " " 
+					 << img->m_img[row*img->width + col].green << " "
+					 << img->m_img[row*img->width + col].blue;
 			}
 			cout << endl;
+		}
+}
+
+void _meanFilter(RGB* input, ImageData* &output, int w) {
+	int W = output->width;
+	int EW = output->width + w*2;
+
+	int H = output->height;
+	int EH = output->height + w*2;
+
+	for (int row = 0; row < H; ++row)
+	{
+		for (int col = 0; col < W; ++col)
+		{
+			int sum_red = 0;
+			int sum_blue = 0;
+			int sum_green = 0;
+			int count = 0;
+			for(int sum_row = -w; sum_row <= w; ++sum_row) {
+				for (int sum_col = -w; sum_col <= w; ++sum_col)
+				{
+					sum_red += input[EW*(row + w + sum_row) + (col + w + sum_col)].red;
+					sum_green += input[EW*(row + w + sum_row) + (col + w + sum_col)].green;
+					sum_blue += input[EW*(row + w + sum_row) + (col + w + sum_col)].blue;
+					count++;
+				}
+			}
+			output->m_img[row*W + col].red = sum_red/count;
+			output->m_img[row*W + col].green = sum_green/count;
+			output->m_img[row*W + col].blue = sum_blue/count;
 		}
 	}
 }
 
-void meanFilter(ImageData* input, ImageData* &output) {
+void meanFilter(ImageData* input, ImageData* &output, int w) {
 
-	int EXT_VALUE = 2;
+	int EXT_VALUE = w;
 
 	int W = input->width;
 	int NW = input->width + EXT_VALUE*2;
@@ -109,23 +136,31 @@ void meanFilter(ImageData* input, ImageData* &output) {
 	int NH = input->height + EXT_VALUE*2;
 
 	RGB* extension = new RGB[(NW) * (NH)];
-	
+
+	// copy output from input
+	output = new ImageData(*input);
+
 	for (int i = 0; i < H; ++i)
 	{
 		memcpy(extension + NW * (i+EXT_VALUE) + EXT_VALUE , input->m_img + i * W, W *sizeof(RGB));
+
+		// ---> OUT OF BOUND HANDLER = LEFT RIGHT
+		for (int ext = 0; ext < EXT_VALUE; ++ext)
+		{
+			extension[NW * (i+EXT_VALUE) + ext] = input->m_img[i*W + (EXT_VALUE - 1 - ext)]; 
+			extension[NW * (i+EXT_VALUE) + NW - 1 - ext] = input->m_img[i*W + W - 1 - (EXT_VALUE - 1 - ext)]; 
+		}
 	}
 
-	for (int row = 0; row < NH; ++row)
+	// ---> OUT OF BOUND HANDLER = TOP BTM
+	// reflection
+	for (int ext = 0; ext < EXT_VALUE; ++ext)
 	{
-		for (int col = 0; col < NW; ++col)
-		{
-			if(col != 0) cout << " ";
-			cout << extension[row*NW + col].red << " " 
-				 << extension[row*NW + col].green << " "
-				 << extension[row*NW + col].blue;
-		}
-		cout << endl;
+		memcpy(extension + ext * NW, extension + (EXT_VALUE*2 - 1 - ext) * NW, NW*sizeof(RGB));
+		memcpy(extension + (NH - EXT_VALUE + ext) * NW, extension + (NH - EXT_VALUE - 1 - ext) * NW, NW*sizeof(RGB));
 	}
+
+	_meanFilter(extension, output , w);
 }
 
 
@@ -139,8 +174,8 @@ int main(int argv, char** argc) {
 	ImageData* output;
 
 	extractInput(img);
-	 meanFilter(img[0], output);
-	//displayOutput(img);
+	meanFilter(img[0], output, 10);
+	displayOutput(output);
 
 	return 0;
 }
