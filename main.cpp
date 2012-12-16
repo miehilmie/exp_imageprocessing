@@ -17,6 +17,8 @@ struct ImageData
 	int width; 
 	int height;
 	RGB*  m_img;
+
+	int neighbour;
 	ImageData() {}
 	ImageData(const ImageData& cpy) {
 		type = cpy.type;
@@ -30,12 +32,12 @@ struct ImageData
 	}
 };
 
-void extractInput(vector<ImageData*> &output) {
-	int size;
-	cin >> size;
-
-	for (int cur_tcase = 0; cur_tcase < size; ++cur_tcase)
-	{
+/***
+ * Fn: extractInput
+ * Params: output - imagedata from file
+                w - kernel value (specifically for meanfilter)
+ */
+void extractInput(ImageData* &output, int &w) {
 		string imgtype;
 		int width;
 		int height;
@@ -69,33 +71,56 @@ void extractInput(vector<ImageData*> &output) {
 			}
 			img[c] = temp;
 		}
+
 		ImageData* n = new ImageData();
 		n->type = imgtype;
 		n->height = height;
 		n->width = width;
 		n->m_img = img;
-		output.push_back(n);
-	}
+		
+
+		// get kernel value
+		cin >> w;
+		output = n;
 }
 
 void displayOutput(ImageData* img) {
 	// displaying
-		cout << img->type << endl;
-		cout << img->width << endl << img->height << endl;
-		for (int row = 0; row < img->height; ++row)
+	cout << img->type << endl;
+	cout << img->width << endl << img->height << endl;
+	for (int row = 0; row < img->height; ++row)
+	{
+		for (int col = 0; col < img->width; ++col)
 		{
-			for (int col = 0; col < img->width; ++col)
-			{
-				if(col != 0) cout << " ";
-				cout << img->m_img[row*img->width + col].red << " " 
-					 << img->m_img[row*img->width + col].green << " "
-					 << img->m_img[row*img->width + col].blue;
-			}
-			cout << endl;
+			if(col != 0) cout << " ";
+			cout << img->m_img[row*img->width + col].red << " " 
+				 << img->m_img[row*img->width + col].green << " "
+				 << img->m_img[row*img->width + col].blue;
 		}
+		cout << endl;
+	}
+}
+
+void displayOutput(ImageData* img, int kernel) {
+	// displaying
+	cout << img->type << endl;
+	cout << img->width << endl << img->height << endl;
+	for (int row = 0; row < img->height; ++row)
+	{
+		for (int col = 0; col < img->width; ++col)
+		{
+			if(col != 0) cout << " ";
+			cout << img->m_img[row*img->width + col].red << " " 
+				 << img->m_img[row*img->width + col].green << " "
+				 << img->m_img[row*img->width + col].blue;
+		}
+		cout << endl;
+	}
+	cout << kernel << endl;
 }
 
 void _meanFilter(RGB* input, ImageData* &output, int w) {
+
 	int W = output->width;
 	int EW = output->width + w*2;
 
@@ -167,15 +192,24 @@ void meanFilter(ImageData* input, ImageData* &output, int w) {
 /***
  * File : main.cpp
  * Description : You should run this using ./a.out < 'file' 
- * 'file' is where your input format file
+ * 'file' is your input format file
 **/
 int main(int argv, char** argc) {
-	vector<ImageData*> img;
+	ImageData*img;
 	ImageData* output;
 
-	extractInput(img);
-	meanFilter(img[0], output, 10);
-	displayOutput(output);
+	int testcase;
+	int kernel;
+	cin >> testcase;
+
+	cout << testcase << endl << endl;
+	for (int i = 0; i < testcase; ++i)
+	{
+		extractInput(img, kernel);
+		meanFilter(img, output, kernel);
+		displayOutput(output, kernel);
+		cout << endl;
+	}
 
 	return 0;
 }
